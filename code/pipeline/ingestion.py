@@ -31,34 +31,42 @@ def load_tickets_from_csv(csv_path: Path) -> List[Dict[str, Any]]:
     logger.info(f"Loaded {len(tickets)} tickets from {csv_path}")
     return tickets
 
+def chunk_markdown(content: str) -> List[str]:
+    import re
+    # Split by markdown headers
+    chunks = re.split(r'\n(?=#+ )', content)
+    # Filter out empty or very small chunks
+    valid_chunks = [c.strip() for c in chunks if len(c.strip()) > 20]
+    return valid_chunks if valid_chunks else [content.strip()]
+
 def load_corpus() -> List[Document]:
-    """Loads all markdown files from the data directory."""
+    """Loads all markdown files from the data directory and chunks them."""
     documents = []
-    # Base directory to compute relative paths as expected by evaluation
     repo_root = DATA_DIR.parent
     
     for root, _, files in os.walk(DATA_DIR):
         for file in files:
             if file.endswith(".md"):
                 full_path = Path(root) / file
-                # relative path with forward slashes as expected by the challenge
                 rel_path = full_path.relative_to(repo_root).as_posix()
                 
                 try:
                     with open(full_path, "r", encoding="utf-8") as f:
                         content = f.read()
                         
-                        # Basic chunking: For simplicity and since docs aren't huge, 
-                        # we'll treat the whole file as one chunk for now, 
-                        # but in Phase 3 we can improve it.
-                        doc = Document(
-                            filepath=rel_path,
-                            content=content,
-                            metadata={"company": full_path.parts[-2] if len(full_path.parts) > 1 else "unknown"}
-                        )
-                        documents.append(doc)
+                        chunks = chunk_markdown(content)
+                        for i, chunk_text in enumerate(chunks):
+                            doc = Document(
+                                filepath=rel_path,
+                                content=chunk_text,
+                                metadata={
+                                    "company": full_path.parts[-2] if len(full_path.parts) > 1 else "unknown",
+                                    "chunk_id": i
+                                }
+                            )
+                            documents.append(doc)
                 except Exception as e:
                     logger.error(f"Failed to read {full_path}: {e}")
                     
-    logger.info(f"Loaded {len(documents)} markdown documents from corpus.")
+    logger.info(f"Loaded {len(documents)} document chunks from corpus.")
     return documents
