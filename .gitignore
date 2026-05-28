@@ -24,3 +24,13 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+
+
+# Model/cache files
+code/.model_cache/
+*.npy
+*.safetensors
+
+# HuggingFace cache
+cache/
+hf_cache/
