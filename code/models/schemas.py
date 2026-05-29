@@ -1,9 +1,17 @@
 from typing import List, Literal, Optional, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 
 class ToolCall(BaseModel):
     action: str
     parameters: Dict[str, Any]
+
+    @model_validator(mode='before')
+    @classmethod
+    def remap_name_to_action(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "action" not in data and "name" in data:
+                data["action"] = data.pop("name")
+        return data
 
 class SupportTicketOutput(BaseModel):
     status: Literal["replied", "escalated"]

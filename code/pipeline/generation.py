@@ -127,7 +127,7 @@ pool = SmartGroqPool(GROQ_API_KEYS) if GROQ_API_KEYS else None
 
 # Limit concurrent generations
 # Prevents all keys from being overwhelmed simultaneously
-GENERATION_SEMAPHORE = asyncio.Semaphore(3)
+GENERATION_SEMAPHORE = asyncio.Semaphore(15)
 
 
 # =========================================================
@@ -172,7 +172,7 @@ Schema requirements:
 
 async def call_groq_api(
     messages,
-    model: str = "llama-3.3-70b-versatile",
+    model: str = "llama-3.1-8b-instant",
     max_attempts: int = 15
 ):
     """
